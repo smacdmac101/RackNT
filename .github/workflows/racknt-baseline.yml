@@ -1,0 +1,42 @@
+name: RackNT i386 baseline
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  bootcd:
+    runs-on: windows-2022
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64_x86
+      - name: Prepare build tools
+        shell: pwsh
+        run: |
+          $tools = Join-Path $env:RUNNER_TEMP 'racknt-tools'
+          New-Item -ItemType Directory $tools
+          curl.exe --fail --location --output "$tools/flexbison.7z" https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+          if ($LASTEXITCODE) { throw 'Flex and Bison download failed' }
+          7z x "$tools/flexbison.7z" "-o$tools"
+          if ($LASTEXITCODE) { throw 'Flex and Bison extraction failed' }
+          $tools | Out-File $env:GITHUB_PATH -Append -Encoding utf8
+          "BISON_PKGDATADIR=$tools/share/bison" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          "M4=$tools/m4.exe" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+      - name: Configure i386 Debug
+        run: cmake -S . -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DCMAKE_BUILD_TYPE=Debug -DDLL_EXPORT_VERSION=0x502 -DENABLE_ROSTESTS=ON
+      - name: Build bootable ISO
+        run: cmake --build build --target bootcd
+      - name: Record artifact checksum
+        run: |
+          $hash = (Get-FileHash build/bootcd.iso).Hash
+          "$hash  bootcd.iso" | Set-Content build/bootcd.sha256
+      - uses: actions/upload-artifact@v7
+        with:
+          name: racknt-i386-debug-${{ github.sha }}
+          path: |
+            build/bootcd.iso
+            build/bootcd.sha256
+          if-no-files-found: error
