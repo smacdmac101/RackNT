@@ -5,12 +5,12 @@ The upstream reference tag is `baseline/reactos-2026-11-24` at `a3772c9df2a1a6f4
 | Check | Initial status |
 |---|---|
 | Fork ancestry and unchanged upstream licensing | Verified during setup |
-| i386 Debug ISO on a second machine | Pending BASE-01 |
+| i386 Debug ISO | Pending BASE-01. Local preflight found no CMake or Ninja on PATH. GitHub reported no registered workflows at setup. |
 | QEMU install, reboot and test cases | Pending BASE-02 |
 | AMD64 baseline | Pending KERN-01 |
 | App compatibility and performance | Pending API-02 and BASE-05 |
 
-The manual **RackNT i386 baseline** Actions workflow uses MSVC and uploads the ISO and its hash after a successful build. RosBE is the local comparison lane. Exact ISO hashes identify artifacts. Toolchain and metadata differences can produce different hashes for equivalent source.
+The manual **RackNT i386 baseline** Actions workflow uses MSVC and uploads the ISO and its hash after a successful build. If Actions shows no workflows, the repository owner should sign in, open the Actions tab and enable workflows for the fork if prompted. Select the RackNT baseline workflow on main and run it. The upstream Build workflow is a separate, larger matrix. RosBE is the local comparison lane. Exact ISO hashes identify artifacts. Toolchain and metadata differences can produce different hashes for equivalent source.
 
 ## VM protocol
 
